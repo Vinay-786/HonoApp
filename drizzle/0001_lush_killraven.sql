@@ -1,0 +1,1 @@
+ALTER TABLE "expenseSchema"."expenses" ADD COLUMN "created_at" timestamp DEFAULT now();

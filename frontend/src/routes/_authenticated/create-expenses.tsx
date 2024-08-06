@@ -1,9 +1,13 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useForm } from '@tanstack/react-form';
 import { api } from '@/lib/api';
+import { zodValidator } from "@tanstack/zod-form-adapter"
+
+import { createPostSchema } from '@server/validatorTypes';
 
 export const Route = createFileRoute('/_authenticated/create-expenses')({
     component: CreateExpenses,
@@ -12,9 +16,10 @@ export const Route = createFileRoute('/_authenticated/create-expenses')({
 function CreateExpenses() {
     const navigate = useNavigate();
     const form = useForm({
+        validatorAdapter: zodValidator(),
         defaultValues: {
             title: '',
-            amount: 0,
+            amount: '0',
         },
         onSubmit: async ({ value }) => {
             const res = await api.expenses.$post({ json: value });
@@ -39,6 +44,9 @@ function CreateExpenses() {
                     {/* A type-safe field component*/}
                     <form.Field
                         name="title"
+                        validators={{
+                            onChange: createPostSchema.shape.title
+                        }}
                         children={(field) => {
                             // Avoid hasty abstractions. Render props are great!
                             return (
@@ -74,7 +82,7 @@ function CreateExpenses() {
                                         value={field.state.value}
                                         onBlur={field.handleBlur}
                                         type='number'
-                                        onChange={(e) => field.handleChange(Number(e.target.value))}
+                                        onChange={(e) => field.handleChange(e.target.value)}
                                     />
 
                                     {field.state.meta.isTouched && field.state.meta.errors.length ? (
