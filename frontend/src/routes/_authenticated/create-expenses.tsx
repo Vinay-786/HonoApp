@@ -1,32 +1,53 @@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useForm } from '@tanstack/react-form';
-import { api } from '@/lib/api';
+import { createExpense, getAllExpensesQueryOptions, loadingCreateExpenseQueryOptions } from '@/lib/api';
+import { useQueryClient } from '@tanstack/react-query';
 import { zodValidator } from "@tanstack/zod-form-adapter"
 
 import { createPostSchema } from '@server/validatorTypes';
+import { expenses } from '@server/db/schema/expenses';
 
 export const Route = createFileRoute('/_authenticated/create-expenses')({
     component: CreateExpenses,
 })
 
 function CreateExpenses() {
+    const queryClient = useQueryClient();
     const navigate = useNavigate();
     const form = useForm({
         validatorAdapter: zodValidator(),
         defaultValues: {
             title: '',
             amount: '0',
+            date: new Date().toISOString(),
         },
         onSubmit: async ({ value }) => {
-            const res = await api.expenses.$post({ json: value });
-            if (!res.ok) {
-                throw new Error("server error");
-            }
+            const existingExpense = await queryClient.ensureQueryData(getAllExpensesQueryOptions);
+
             navigate({ to: "/expenses" });
+
+            //loading state
+            queryClient.setQueryData(loadingCreateExpenseQueryOptions.queryKey, { expense: value })
+
+            try {
+                const newExpense = await createExpense({ value });
+
+                queryClient.setQueryData(getAllExpensesQueryOptions.queryKey, {
+                    ...existingExpense,
+                    expenses: [newExpense, ...existingExpense.expenses],
+                });
+            } catch (error) {
+                //error state
+            } finally {
+                queryClient.setQueryData(loadingCreateExpenseQueryOptions.queryKey, {})
+            }
+
+
         },
     });
 
@@ -71,6 +92,9 @@ function CreateExpenses() {
                 <div>
                     <form.Field
                         name="amount"
+                        validators={{
+                            onChange: createPostSchema.shape.amount
+                        }}
                         children={(field) => {
                             // Avoid hasty abstractions. Render props are great!
                             return (
@@ -89,6 +113,31 @@ function CreateExpenses() {
                                         <em>{field.state.meta.errors.join(", ")}</em>
                                     ) : null}
                                 </>
+                            )
+                        }}
+                    />
+                </div>
+                <div>
+                    <form.Field
+                        name="date"
+                        validators={{
+                            onChange: createPostSchema.shape.date
+                        }}
+                        children={(field) => {
+                            // Avoid hasty abstractions. Render props are great!
+                            return (
+                                <div className='self-center'>
+                                    <Calendar
+                                        mode="single"
+                                        selected={new Date(field.state.value)}
+                                        onSelect={(date) => field.handleChange((date ?? new Date()).toISOString())}
+                                        className="rounded-md border"
+                                    />
+
+                                    {field.state.meta.isTouched && field.state.meta.errors.length ? (
+                                        <em>{field.state.meta.errors.join(", ")}</em>
+                                    ) : null}
+                                </div>
                             )
                         }}
                     />

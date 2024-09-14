@@ -1,11 +1,12 @@
-import { z } from "zod";
+import { insertUserSchema } from "./db/schema/expenses";
+import { z } from 'zod';
 
-export const expenseSchema = z.object({
-    id: z.number().int().positive().min(1),
-    title: z.string()
-        .min(5, { message: "Title must be atleat 3 characters" })
-        .max(30, { message: "Title can be at most 30 characters" }),
-    amount: z.string(),
+
+
+export const createPostSchema = insertUserSchema.omit({
+    userId: true,
+    createdAt: true,
+    id: true
 });
 
-export const createPostSchema = expenseSchema.omit({ id: true });
+export type CreateExpense = z.infer<typeof createPostSchema>;

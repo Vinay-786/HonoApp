@@ -1,4 +1,4 @@
-# app
+# Expense app
 
 To install dependencies:
 
@@ -9,7 +9,19 @@ bun install
 To run:
 
 ```bash
-bun run index.ts
+bun dev
 ```
+_Note: you need to run that command in both server and frontend directories for it to work
 
-This project was created using `bun init` in bun v1.1.18. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+## Deploy
+
+This app can be easily deployed on ony simple vps.
+
+You can deploy frontend and backend on separate edge runtimes. just add right proxy of your backend to the frontend.
+
+```javascript
+    proxy: {
+      "/api": {
+        target: "http://localhost:3000",
+        changeOrigin: true,
+```

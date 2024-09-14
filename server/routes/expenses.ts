@@ -3,7 +3,7 @@ import { zValidator } from "@hono/zod-validator";
 import { getUser } from "../kinde";
 
 import { db } from "../db";
-import { expenses as expenseTable } from "../db/schema/expenses";
+import { expenses, expenses as expenseTable, insertUserSchema } from "../db/schema/expenses";
 import { desc, eq, sum, and } from "drizzle-orm";
 
 import { createPostSchema } from '../validatorTypes';
@@ -21,13 +21,19 @@ export const expensesRoute = new Hono()
         return c.json({ expenses: expenses });
     })
     .post("/", getUser, zValidator("json", createPostSchema), async (c) => {
-        const expense = await c.req.valid("json");
+        const expense = c.req.valid("json");
         const user = c.var.user;
 
-        const result = await db.insert(expenseTable).values({
+        const validatedExpense = insertUserSchema.parse({
             ...expense,
             userId: user.id
-        }).returning();
+        });
+
+        const result = await db
+            .insert(expenseTable)
+            .values(validatedExpense)
+            .returning()
+            .then((res) => res[0]);
 
         c.status(201)
         return c.json(result);

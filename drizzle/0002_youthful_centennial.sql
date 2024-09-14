@@ -1,0 +1,1 @@
+ALTER TABLE "expenseSchema"."expenses" ADD COLUMN "date" date NOT NULL;

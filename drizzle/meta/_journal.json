@@ -15,6 +15,13 @@
       "when": 1722958984470,
       "tag": "0001_lush_killraven",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1726259880044,
+      "tag": "0002_youthful_centennial",
+      "breakpoints": true
     }
   ]
 }
